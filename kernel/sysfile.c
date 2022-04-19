@@ -13,6 +13,7 @@
 #include "proc.h"
 #include "fs.h"
 #include "sleeplock.h"
+#include "sysinfo.h"
 #include "file.h"
 #include "fcntl.h"
 
@@ -114,6 +115,21 @@ sys_fstat(void)
     return -1;
   return filestat(f, st);
 }
+
+uint64
+sys_sysinfo(void) {
+  uint64 addr;
+  struct sysinfo info;
+
+  if (argaddr(0, &addr) < 0)
+    return -1;
+  info.freemem = alloc_free_stat();
+  info.nproc = usedproc();
+  if(copyout(myproc()->pagetable, addr, (char *)&info, sizeof(info)) < 0)
+    return -1;
+  return 0;
+}
+
 
 // Create the path new as a link to the same inode as old.
 uint64
